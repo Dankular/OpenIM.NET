@@ -1,0 +1,602 @@
+/* YpeSke - Skype-like Chat Styles */
+
+/* Color Variables (Skype Theme) */
+:root {
+    --skype-blue: #00AFF0;
+    --skype-blue-dark: #0078D4;
+    --skype-blue-light: #E5F6FD;
+    --text-primary: #242424;
+    --text-secondary: #616161;
+    --text-muted: #8A8A8A;
+    --bg-white: #FFFFFF;
+    --bg-light: #F5F5F5;
+    --bg-hover: #E8E8E8;
+    --border-color: #E0E0E0;
+    --online-green: #6BB700;
+    --away-yellow: #FFAA44;
+    --busy-red: #C50F1F;
+    --offline-gray: #8A8A8A;
+    --sent-bubble: #E5F6FD;
+    --received-bubble: #FFFFFF;
+}
+
+/* Base Styles */
+body, html {
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 14px;
+    color: var(--text-primary);
+    background: var(--bg-white);
+}
+
+/* Contact Item Template */
+.contact-item {
+    display: flex;
+    align-items: center;
+    padding: 12px 16px;
+    cursor: pointer;
+    border-bottom: 1px solid var(--border-color);
+    transition: background-color 0.15s ease;
+}
+
+.contact-item:hover {
+    background-color: var(--bg-hover);
+}
+
+.contact-item.selected {
+    background-color: var(--skype-blue-light);
+}
+
+.contact-item .avatar-container {
+    position: relative;
+    flex-shrink: 0;
+    margin-right: 12px;
+}
+
+.contact-item .avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background-color: var(--skype-blue);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 600;
+    font-size: 16px;
+    overflow: hidden;
+}
+
+.contact-item .avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.contact-item .status-indicator {
+    position: absolute;
+    bottom: 2px;
+    right: 2px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 2px solid white;
+}
+
+.contact-item .status-indicator.online {
+    background-color: var(--online-green);
+}
+
+.contact-item .status-indicator.away {
+    background-color: var(--away-yellow);
+}
+
+.contact-item .status-indicator.busy {
+    background-color: var(--busy-red);
+}
+
+.contact-item .status-indicator.offline {
+    background-color: var(--offline-gray);
+}
+
+.contact-item .contact-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.contact-item .name {
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.contact-item .preview {
+    font-size: 13px;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-top: 2px;
+}
+
+.contact-item .time-badge {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    margin-left: 8px;
+    flex-shrink: 0;
+}
+
+.contact-item .time {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.contact-item .unread-badge {
+    background-color: var(--skype-blue);
+    color: white;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 10px;
+    margin-top: 4px;
+    min-width: 18px;
+    text-align: center;
+}
+
+/* Message Bubble Template */
+.message-container {
+    display: flex;
+    margin: 8px 16px;
+    max-width: 100%;
+}
+
+.message-container.sent {
+    justify-content: flex-end;
+}
+
+.message-container.received {
+    justify-content: flex-start;
+}
+
+.message-container .avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background-color: var(--skype-blue);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 600;
+    font-size: 12px;
+    flex-shrink: 0;
+    margin-right: 8px;
+    overflow: hidden;
+}
+
+.message-container .avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.message-container.sent .avatar {
+    display: none;
+}
+
+.message-bubble {
+    max-width: 65%;
+    padding: 10px 14px;
+    border-radius: 18px;
+    position: relative;
+}
+
+.message-container.received .message-bubble {
+    background-color: var(--received-bubble);
+    border: 1px solid var(--border-color);
+    border-bottom-left-radius: 4px;
+}
+
+.message-container.sent .message-bubble {
+    background-color: var(--skype-blue-light);
+    border-bottom-right-radius: 4px;
+}
+
+.message-bubble .content {
+    font-size: 14px;
+    line-height: 1.4;
+    color: var(--text-primary);
+    word-wrap: break-word;
+}
+
+.message-bubble .meta {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    margin-top: 4px;
+    gap: 4px;
+}
+
+.message-bubble .timestamp {
+    font-size: 11px;
+    color: var(--text-muted);
+}
+
+.message-bubble .delivery-status {
+    font-size: 11px;
+    color: var(--text-muted);
+}
+
+.message-bubble .delivery-status.read {
+    color: var(--skype-blue);
+}
+
+.message-bubble .delivery-status.failed {
+    color: var(--busy-red);
+}
+
+/* Chat Header */
+.chat-header {
+    display: flex;
+    align-items: center;
+    padding: 12px 16px;
+    background-color: var(--bg-white);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.chat-header .avatar-container {
+    position: relative;
+    margin-right: 12px;
+}
+
+.chat-header .avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: var(--skype-blue);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 600;
+    font-size: 14px;
+    overflow: hidden;
+}
+
+.chat-header .avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.chat-header .status-indicator {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    border: 2px solid white;
+}
+
+.chat-header .contact-info {
+    flex: 1;
+}
+
+.chat-header .name {
+    font-weight: 600;
+    font-size: 16px;
+    color: var(--text-primary);
+}
+
+.chat-header .status-text {
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.chat-header .actions {
+    display: flex;
+    gap: 8px;
+}
+
+.chat-header .action-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: none;
+    background-color: transparent;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-secondary);
+    font-size: 18px;
+    transition: background-color 0.15s ease;
+}
+
+.chat-header .action-btn:hover {
+    background-color: var(--bg-hover);
+}
+
+/* Chat Input */
+.chat-input-container {
+    display: flex;
+    align-items: flex-end;
+    padding: 12px 16px;
+    background-color: var(--bg-white);
+    border-top: 1px solid var(--border-color);
+    gap: 8px;
+}
+
+.chat-input-container .input-wrapper {
+    flex: 1;
+    display: flex;
+    align-items: flex-end;
+    background-color: var(--bg-light);
+    border-radius: 20px;
+    padding: 8px 16px;
+    min-height: 40px;
+    box-sizing: border-box;
+}
+
+.chat-input-container .input-field {
+    flex: 1;
+    border: none;
+    background: transparent;
+    font-size: 14px;
+    font-family: inherit;
+    resize: none;
+    outline: none;
+    min-height: 24px;
+    max-height: 120px;
+    line-height: 1.4;
+}
+
+.chat-input-container .action-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: none;
+    background-color: transparent;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-secondary);
+    font-size: 20px;
+    transition: all 0.15s ease;
+    flex-shrink: 0;
+}
+
+.chat-input-container .action-btn:hover {
+    background-color: var(--bg-hover);
+}
+
+.chat-input-container .send-btn {
+    background-color: var(--skype-blue);
+    color: white;
+}
+
+.chat-input-container .send-btn:hover {
+    background-color: var(--skype-blue-dark);
+}
+
+.chat-input-container .send-btn:disabled {
+    background-color: var(--bg-hover);
+    color: var(--text-muted);
+    cursor: not-allowed;
+}
+
+/* Sidebar Navigation */
+.sidebar-nav {
+    display: flex;
+    flex-direction: column;
+    background-color: var(--bg-light);
+    padding: 8px 0;
+}
+
+.sidebar-nav .nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 12px 8px;
+    cursor: pointer;
+    color: var(--text-secondary);
+    transition: all 0.15s ease;
+}
+
+.sidebar-nav .nav-item:hover {
+    background-color: var(--bg-hover);
+    color: var(--text-primary);
+}
+
+.sidebar-nav .nav-item.active {
+    color: var(--skype-blue);
+    background-color: var(--skype-blue-light);
+}
+
+.sidebar-nav .nav-item .icon {
+    font-size: 24px;
+    margin-bottom: 4px;
+}
+
+.sidebar-nav .nav-item .label {
+    font-size: 11px;
+}
+
+/* User Profile Header */
+.profile-header {
+    display: flex;
+    align-items: center;
+    padding: 12px 16px;
+    background-color: var(--bg-light);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.profile-header .avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background-color: var(--skype-blue);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 600;
+    font-size: 13px;
+    margin-right: 12px;
+    overflow: hidden;
+}
+
+.profile-header .user-info {
+    flex: 1;
+}
+
+.profile-header .user-name {
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--text-primary);
+}
+
+.profile-header .user-status {
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+/* Search Box */
+.search-box {
+    display: flex;
+    align-items: center;
+    padding: 8px 16px;
+    background-color: var(--bg-white);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.search-box .search-input {
+    flex: 1;
+    border: none;
+    background-color: var(--bg-light);
+    border-radius: 16px;
+    padding: 8px 16px;
+    font-size: 14px;
+    font-family: inherit;
+    outline: none;
+}
+
+.search-box .search-input:focus {
+    background-color: var(--bg-white);
+    box-shadow: 0 0 0 2px var(--skype-blue);
+}
+
+/* Empty State */
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    padding: 32px;
+    text-align: center;
+    color: var(--text-secondary);
+}
+
+.empty-state .icon {
+    font-size: 64px;
+    margin-bottom: 16px;
+    opacity: 0.5;
+}
+
+.empty-state .title {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+}
+
+.empty-state .description {
+    font-size: 14px;
+    max-width: 300px;
+}
+
+/* Typing Indicator */
+.typing-indicator {
+    display: flex;
+    align-items: center;
+    padding: 8px 16px;
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.typing-indicator .dots {
+    display: flex;
+    gap: 3px;
+    margin-left: 8px;
+}
+
+.typing-indicator .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: var(--text-muted);
+    animation: typing 1.4s infinite ease-in-out;
+}
+
+.typing-indicator .dot:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.typing-indicator .dot:nth-child(3) {
+    animation-delay: 0.4s;
+}
+
+@keyframes typing {
+    0%, 60%, 100% {
+        transform: translateY(0);
+        opacity: 0.4;
+    }
+    30% {
+        transform: translateY(-4px);
+        opacity: 1;
+    }
+}
+
+/* Date Separator */
+.date-separator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+}
+
+.date-separator .date-text {
+    font-size: 12px;
+    color: var(--text-muted);
+    background-color: var(--bg-light);
+    padding: 4px 12px;
+    border-radius: 12px;
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background-color: var(--border-color);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background-color: var(--text-muted);
+}

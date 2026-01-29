@@ -1,0 +1,12 @@
+<div class="message-container received">
+    <div class="avatar">
+        ${HasAvatar:<img src="${SenderAvatarUrl}" alt="${SenderName}"/>}
+        ${NoAvatar:${SenderInitials}}
+    </div>
+    <div class="message-bubble">
+        <div class="content">${Content}</div>
+        <div class="meta">
+            <span class="timestamp">${FormattedTime}</span>
+        </div>
+    </div>
+</div>

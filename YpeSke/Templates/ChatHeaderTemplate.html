@@ -1,0 +1,18 @@
+<div class="chat-header">
+    <div class="avatar-container">
+        <div class="avatar">
+            ${HasAvatar:<img src="${AvatarUrl}" alt="${Name}"/>}
+            ${NoAvatar:${Initials}}
+        </div>
+        <div class="status-indicator ${StatusClass}"></div>
+    </div>
+    <div class="contact-info">
+        <span class="name">${Name}</span>
+        <span class="status-text">${StatusText}</span>
+    </div>
+    <div class="actions">
+        <button class="action-btn" id="btnVideo" title="Video call">&#128249;</button>
+        <button class="action-btn" id="btnCall" title="Audio call">&#128222;</button>
+        <button class="action-btn" id="btnMore" title="More options">&#8942;</button>
+    </div>
+</div>

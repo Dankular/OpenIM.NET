@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <ApplicationIcon></ApplicationIcon>
+    <StartupObject>YpeSke.Program</StartupObject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="DevExpress.Win" Version="25.1.*" />
+    <PackageReference Include="DevExpress.Win.BonusSkins" Version="25.1.*" />
+    <PackageReference Include="DevExpress.Win.Navigation" Version="25.1.*" />
+    <PackageReference Include="DevExpress.Win.Grid" Version="25.1.*" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="Templates\**" />
+    <EmbeddedResource Include="Templates\**" />
+  </ItemGroup>
+
+</Project>

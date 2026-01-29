@@ -1,0 +1,17 @@
+<div class="contact-item ${IsSelected}">
+    <div class="avatar-container">
+        <div class="avatar">
+            ${HasAvatar:<img src="${AvatarUrl}" alt="${Name}"/>}
+            ${NoAvatar:${Initials}}
+        </div>
+        <div class="status-indicator ${StatusClass}"></div>
+    </div>
+    <div class="contact-info">
+        <span class="name">${Name}</span>
+        <span class="preview">${LastMessagePreview}</span>
+    </div>
+    <div class="time-badge">
+        <span class="time">${LastMessageTime}</span>
+        ${HasUnread:<span class="unread-badge">${UnreadCount}</span>}
+    </div>
+</div>
