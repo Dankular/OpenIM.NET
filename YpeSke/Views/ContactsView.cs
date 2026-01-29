@@ -1,7 +1,6 @@
 using DevExpress.XtraEditors;
 using DevExpress.XtraGrid;
-using DevExpress.XtraGrid.Views.Tile;
-using DevExpress.XtraGrid.Views.Tile.ViewInfo;
+using DevExpress.XtraGrid.Views.Grid;
 using YpeSke.ViewModels;
 
 namespace YpeSke.Views;
@@ -9,7 +8,7 @@ namespace YpeSke.Views;
 public class ContactsView : XtraUserControl
 {
     private readonly GridControl _gridControl;
-    private readonly TileView _tileView;
+    private readonly GridView _gridView;
     private readonly TextEdit _searchBox;
     private ContactsViewModel? _viewModel;
 
@@ -17,7 +16,7 @@ public class ContactsView : XtraUserControl
     {
         InitializeComponent();
         _gridControl = new GridControl { Dock = DockStyle.Fill };
-        _tileView = new TileView();
+        _gridView = new GridView();
         _searchBox = new TextEdit();
 
         SetupSearchBox();
@@ -41,65 +40,168 @@ public class ContactsView : XtraUserControl
 
     private void SetupGridControl()
     {
-        _gridControl.MainView = _tileView;
+        _gridControl.MainView = _gridView;
 
-        // Configure TileView for contact list display
-        _tileView.OptionsTiles.RowCount = 0;
-        _tileView.OptionsTiles.Orientation = System.Windows.Forms.Orientation.Vertical;
-        _tileView.OptionsTiles.ItemSize = new Size(280, 70);
-        _tileView.Appearance.ItemNormal.BackColor = Color.White;
-        _tileView.Appearance.ItemHovered.BackColor = Color.FromArgb(232, 232, 232);
-        _tileView.Appearance.ItemFocused.BackColor = Color.FromArgb(229, 246, 253);
-        _tileView.BorderStyle = DevExpress.XtraEditors.Controls.BorderStyles.NoBorder;
+        // Hide standard grid UI
+        _gridView.OptionsView.ShowColumnHeaders = false;
+        _gridView.OptionsView.ShowGroupPanel = false;
+        _gridView.OptionsView.ShowIndicator = false;
+        _gridView.OptionsSelection.EnableAppearanceFocusedCell = false;
+        _gridView.BorderStyle = DevExpress.XtraEditors.Controls.BorderStyles.NoBorder;
 
-        // Add columns for data binding
-        _tileView.Columns.AddVisible("Name");
-        _tileView.Columns.AddVisible("Initials");
-        _tileView.Columns.AddVisible("LastMessagePreview");
-        _tileView.Columns.AddVisible("LastMessageTime");
-        _tileView.Columns.AddVisible("StatusClass");
+        // Single column for custom drawing
+        var col = _gridView.Columns.AddVisible("Name");
+        col.OptionsColumn.ReadOnly = true;
 
-        // Configure tile template
-        var group = new TileViewItemElement
+        // Custom drawing events
+        _gridView.CalcRowHeight += GridView_CalcRowHeight;
+        _gridView.CustomDrawCell += GridView_CustomDrawCell;
+        _gridView.RowCellStyle += GridView_RowCellStyle;
+
+        // Handle selection
+        _gridView.FocusedRowObjectChanged += GridView_FocusedRowObjectChanged;
+    }
+
+    private void GridView_CalcRowHeight(object sender, DevExpress.XtraGrid.Views.Grid.RowHeightEventArgs e)
+    {
+        e.RowHeight = 70;
+    }
+
+    private void GridView_RowCellStyle(object sender, DevExpress.XtraGrid.Views.Grid.RowCellStyleEventArgs e)
+    {
+        if (e.RowHandle < 0) return;
+
+        var item = _gridView.GetRow(e.RowHandle) as ConversationDisplayItem;
+        if (item == null) return;
+
+        if (item.IsSelected)
         {
-            Column = _tileView.Columns["Initials"],
-            TextAlignment = DevExpress.XtraEditors.TileItemContentAlignment.MiddleCenter,
-            ImageAlignment = DevExpress.XtraEditors.TileItemContentAlignment.MiddleCenter,
-            Width = 48,
-            Height = 48,
-            AnchorElement = null,
-            AnchorIndent = 10,
-            Appearance = { Normal = { BackColor = Color.FromArgb(0, 175, 240), ForeColor = Color.White, Font = new Font("Segoe UI", 14, FontStyle.Bold) } }
+            e.Appearance.BackColor = Color.FromArgb(229, 246, 253);
+        }
+        else
+        {
+            e.Appearance.BackColor = Color.White;
+        }
+    }
+
+    private void GridView_CustomDrawCell(object sender, DevExpress.XtraGrid.Views.Base.RowCellCustomDrawEventArgs e)
+    {
+        if (e.RowHandle < 0) return;
+
+        var item = _gridView.GetRow(e.RowHandle) as ConversationDisplayItem;
+        if (item == null) return;
+
+        e.Handled = true;
+        var g = e.Graphics;
+        var bounds = e.Bounds;
+
+        // Background
+        var bgColor = item.IsSelected ? Color.FromArgb(229, 246, 253) : Color.White;
+        using (var brush = new SolidBrush(bgColor))
+        {
+            g.FillRectangle(brush, bounds);
+        }
+
+        // Avatar circle (left side)
+        var avatarSize = 48;
+        var avatarX = bounds.X + 12;
+        var avatarY = bounds.Y + (bounds.Height - avatarSize) / 2;
+        var avatarRect = new Rectangle(avatarX, avatarY, avatarSize, avatarSize);
+
+        g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+        using (var avatarBrush = new SolidBrush(Color.FromArgb(0, 175, 240)))
+        {
+            g.FillEllipse(avatarBrush, avatarRect);
+        }
+
+        // Initials in avatar
+        using (var font = new Font("Segoe UI", 14, FontStyle.Bold))
+        using (var textBrush = new SolidBrush(Color.White))
+        {
+            var sf = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
+            g.DrawString(item.Initials, font, textBrush, avatarRect, sf);
+        }
+
+        // Status indicator
+        var statusSize = 14;
+        var statusX = avatarX + avatarSize - statusSize + 2;
+        var statusY = avatarY + avatarSize - statusSize + 2;
+        var statusRect = new Rectangle(statusX, statusY, statusSize, statusSize);
+
+        var statusColor = item.StatusClass switch
+        {
+            "online" => Color.FromArgb(107, 183, 0),
+            "away" => Color.FromArgb(255, 170, 68),
+            "busy" => Color.FromArgb(197, 15, 31),
+            _ => Color.FromArgb(138, 138, 138)
         };
 
-        var nameElement = new TileViewItemElement
+        using (var statusBrush = new SolidBrush(statusColor))
+        using (var borderPen = new Pen(Color.White, 2))
         {
-            Column = _tileView.Columns["Name"],
-            TextAlignment = DevExpress.XtraEditors.TileItemContentAlignment.TopLeft,
-            Appearance = { Normal = { Font = new Font("Segoe UI", 11, FontStyle.Bold), ForeColor = Color.FromArgb(36, 36, 36) } }
-        };
+            g.FillEllipse(statusBrush, statusRect);
+            g.DrawEllipse(borderPen, statusRect);
+        }
 
-        var previewElement = new TileViewItemElement
+        // Text area starts after avatar
+        var textX = avatarX + avatarSize + 12;
+        var textWidth = bounds.Width - textX - 60;
+
+        // Name
+        using (var font = new Font("Segoe UI", 11, FontStyle.Bold))
+        using (var textBrush = new SolidBrush(Color.FromArgb(36, 36, 36)))
         {
-            Column = _tileView.Columns["LastMessagePreview"],
-            TextAlignment = DevExpress.XtraEditors.TileItemContentAlignment.BottomLeft,
-            Appearance = { Normal = { Font = new Font("Segoe UI", 9), ForeColor = Color.FromArgb(97, 97, 97) } }
-        };
+            var nameRect = new Rectangle(textX, bounds.Y + 12, textWidth, 22);
+            g.DrawString(item.Name, font, textBrush, nameRect, new StringFormat { Trimming = StringTrimming.EllipsisCharacter });
+        }
 
-        var timeElement = new TileViewItemElement
+        // Message preview
+        using (var font = new Font("Segoe UI", 9))
+        using (var textBrush = new SolidBrush(Color.FromArgb(97, 97, 97)))
         {
-            Column = _tileView.Columns["LastMessageTime"],
-            TextAlignment = DevExpress.XtraEditors.TileItemContentAlignment.TopRight,
-            Appearance = { Normal = { Font = new Font("Segoe UI", 9), ForeColor = Color.FromArgb(138, 138, 138) } }
-        };
+            var previewRect = new Rectangle(textX, bounds.Y + 38, textWidth, 20);
+            g.DrawString(item.LastMessagePreview, font, textBrush, previewRect, new StringFormat { Trimming = StringTrimming.EllipsisCharacter });
+        }
 
-        _tileView.TileTemplate.Add(group);
-        _tileView.TileTemplate.Add(nameElement);
-        _tileView.TileTemplate.Add(previewElement);
-        _tileView.TileTemplate.Add(timeElement);
+        // Time (right side)
+        using (var font = new Font("Segoe UI", 9))
+        using (var textBrush = new SolidBrush(Color.FromArgb(138, 138, 138)))
+        {
+            var timeRect = new Rectangle(bounds.Right - 70, bounds.Y + 12, 60, 20);
+            var sf = new StringFormat { Alignment = StringAlignment.Far };
+            g.DrawString(item.LastMessageTime, font, textBrush, timeRect, sf);
+        }
 
-        // Handle item click
-        _tileView.FocusedRowObjectChanged += TileView_FocusedRowObjectChanged;
+        // Unread badge
+        if (item.HasUnread && item.UnreadCount > 0)
+        {
+            var badgeText = item.UnreadCount.ToString();
+            using (var font = new Font("Segoe UI", 9, FontStyle.Bold))
+            {
+                var badgeSize = g.MeasureString(badgeText, font);
+                var badgeWidth = Math.Max(20, (int)badgeSize.Width + 10);
+                var badgeX = bounds.Right - 20 - badgeWidth / 2;
+                var badgeY = bounds.Y + 40;
+                var badgeRect = new Rectangle(badgeX, badgeY, badgeWidth, 18);
+
+                using (var badgeBrush = new SolidBrush(Color.FromArgb(0, 175, 240)))
+                {
+                    g.FillRoundedRectangle(badgeBrush, badgeRect, 9);
+                }
+
+                using (var textBrush = new SolidBrush(Color.White))
+                {
+                    var sf = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
+                    g.DrawString(badgeText, font, textBrush, badgeRect, sf);
+                }
+            }
+        }
+
+        // Bottom border
+        using (var pen = new Pen(Color.FromArgb(230, 230, 230)))
+        {
+            g.DrawLine(pen, bounds.X + 72, bounds.Bottom - 1, bounds.Right, bounds.Bottom - 1);
+        }
     }
 
     private void SetupLayout()
@@ -151,12 +253,33 @@ public class ContactsView : XtraUserControl
         }
     }
 
-    private void TileView_FocusedRowObjectChanged(object sender, DevExpress.XtraGrid.Views.Base.FocusedRowObjectChangedEventArgs e)
+    private void GridView_FocusedRowObjectChanged(object sender, DevExpress.XtraGrid.Views.Base.FocusedRowObjectChangedEventArgs e)
     {
         if (_viewModel == null || e.Row is not ConversationDisplayItem item)
             return;
 
         _viewModel.SelectedConversation = item.Conversation;
         RefreshData();
+    }
+}
+
+// Extension method for rounded rectangles
+public static class GraphicsExtensions
+{
+    public static void FillRoundedRectangle(this Graphics g, Brush brush, Rectangle rect, int radius)
+    {
+        using var path = new System.Drawing.Drawing2D.GraphicsPath();
+        var arc = new Rectangle(rect.Location, new Size(radius * 2, radius * 2));
+
+        path.AddArc(arc, 180, 90);
+        arc.X = rect.Right - radius * 2;
+        path.AddArc(arc, 270, 90);
+        arc.Y = rect.Bottom - radius * 2;
+        path.AddArc(arc, 0, 90);
+        arc.X = rect.Left;
+        path.AddArc(arc, 90, 90);
+        path.CloseFigure();
+
+        g.FillPath(brush, path);
     }
 }

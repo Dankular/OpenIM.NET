@@ -1,6 +1,5 @@
 using DevExpress.XtraEditors;
 using DevExpress.XtraGrid;
-using DevExpress.XtraGrid.Columns;
 using DevExpress.XtraGrid.Views.Grid;
 using YpeSke.ViewModels;
 
@@ -13,8 +12,10 @@ public class MessagesView : XtraUserControl
     private readonly Panel _headerPanel;
     private readonly Label _headerName;
     private readonly Label _headerStatus;
+    private readonly Panel _avatarPanel;
     private readonly Panel _emptyStatePanel;
     private MessagesViewModel? _viewModel;
+    private string _headerInitials = "";
 
     public MessagesView()
     {
@@ -24,6 +25,7 @@ public class MessagesView : XtraUserControl
         _headerPanel = new Panel();
         _headerName = new Label();
         _headerStatus = new Label();
+        _avatarPanel = new Panel();
         _emptyStatePanel = new Panel();
 
         SetupHeader();
@@ -42,8 +44,21 @@ public class MessagesView : XtraUserControl
         _headerPanel.Dock = DockStyle.Top;
         _headerPanel.Height = 65;
         _headerPanel.BackColor = Color.White;
-        _headerPanel.Padding = new Padding(16, 12, 16, 12);
         _headerPanel.Visible = false;
+
+        _avatarPanel.Size = new Size(40, 40);
+        _avatarPanel.Location = new Point(16, 12);
+        _avatarPanel.Paint += (s, e) =>
+        {
+            e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+            using var brush = new SolidBrush(Color.FromArgb(0, 120, 212));
+            e.Graphics.FillEllipse(brush, 0, 0, 39, 39);
+
+            using var font = new Font("Segoe UI", 12, FontStyle.Bold);
+            using var textBrush = new SolidBrush(Color.White);
+            var sf = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
+            e.Graphics.DrawString(_headerInitials, font, textBrush, new Rectangle(0, 0, 40, 40), sf);
+        };
 
         _headerName.Font = new Font("Segoe UI", 14, FontStyle.Bold);
         _headerName.ForeColor = Color.FromArgb(36, 36, 36);
@@ -51,27 +66,68 @@ public class MessagesView : XtraUserControl
         _headerName.AutoSize = true;
 
         _headerStatus.Font = new Font("Segoe UI", 10);
-        _headerStatus.ForeColor = Color.FromArgb(97, 97, 97);
-        _headerStatus.Location = new Point(70, 34);
+        _headerStatus.ForeColor = Color.FromArgb(107, 183, 0); // Green for online
+        _headerStatus.Location = new Point(70, 36);
         _headerStatus.AutoSize = true;
 
-        // Avatar circle
-        var avatarPanel = new Panel
+        // Call buttons on the right
+        var videoBtn = CreateHeaderButton("\U0001F4F9", 36); // Video camera
+        var audioBtn = CreateHeaderButton("\U0001F4DE", 36); // Phone
+        var moreBtn = CreateHeaderButton("\u22EE", 36);      // More (vertical dots)
+
+        _headerPanel.SizeChanged += (s, e) =>
         {
-            Size = new Size(40, 40),
-            Location = new Point(16, 12),
-            BackColor = Color.FromArgb(0, 175, 240)
-        };
-        avatarPanel.Paint += (s, e) =>
-        {
-            e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
-            using var brush = new SolidBrush(Color.FromArgb(0, 175, 240));
-            e.Graphics.FillEllipse(brush, 0, 0, 39, 39);
+            moreBtn.Location = new Point(_headerPanel.Width - 50, 15);
+            audioBtn.Location = new Point(_headerPanel.Width - 90, 15);
+            videoBtn.Location = new Point(_headerPanel.Width - 130, 15);
         };
 
+        _headerPanel.Controls.Add(_avatarPanel);
         _headerPanel.Controls.Add(_headerName);
         _headerPanel.Controls.Add(_headerStatus);
-        _headerPanel.Controls.Add(avatarPanel);
+        _headerPanel.Controls.Add(videoBtn);
+        _headerPanel.Controls.Add(audioBtn);
+        _headerPanel.Controls.Add(moreBtn);
+
+        // Bottom border
+        _headerPanel.Paint += (s, e) =>
+        {
+            using var pen = new Pen(Color.FromArgb(230, 230, 230));
+            e.Graphics.DrawLine(pen, 0, _headerPanel.Height - 1, _headerPanel.Width, _headerPanel.Height - 1);
+        };
+    }
+
+    private Panel CreateHeaderButton(string icon, int size)
+    {
+        var btn = new Panel
+        {
+            Size = new Size(size, size),
+            BackColor = Color.Transparent,
+            Cursor = Cursors.Hand
+        };
+
+        btn.Paint += (s, e) =>
+        {
+            e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+
+            // Circle background on hover
+            if (btn.Tag as string == "hover")
+            {
+                using var hoverBrush = new SolidBrush(Color.FromArgb(240, 240, 240));
+                e.Graphics.FillEllipse(hoverBrush, 0, 0, size - 1, size - 1);
+            }
+
+            // Icon
+            using var font = new Font("Segoe UI Emoji", 14);
+            using var brush = new SolidBrush(Color.FromArgb(0, 120, 212));
+            var sf = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
+            e.Graphics.DrawString(icon, font, brush, new Rectangle(0, 0, size, size), sf);
+        };
+
+        btn.MouseEnter += (s, e) => { btn.Tag = "hover"; btn.Invalidate(); };
+        btn.MouseLeave += (s, e) => { btn.Tag = null; btn.Invalidate(); };
+
+        return btn;
     }
 
     private void SetupEmptyState()
@@ -114,55 +170,30 @@ public class MessagesView : XtraUserControl
     private void SetupGridControl()
     {
         _gridControl.MainView = _gridView;
+
+        // Hide standard grid UI
         _gridView.OptionsView.ShowColumnHeaders = false;
         _gridView.OptionsView.ShowGroupPanel = false;
         _gridView.OptionsView.ShowIndicator = false;
+        _gridView.OptionsView.ShowHorizontalLines = DevExpress.Utils.DefaultBoolean.False;
+        _gridView.OptionsView.ShowVerticalLines = DevExpress.Utils.DefaultBoolean.False;
         _gridView.OptionsSelection.EnableAppearanceFocusedCell = false;
         _gridView.OptionsSelection.EnableAppearanceFocusedRow = false;
         _gridView.BorderStyle = DevExpress.XtraEditors.Controls.BorderStyles.NoBorder;
+        _gridView.Appearance.Row.BackColor = Color.FromArgb(245, 245, 245);
 
-        // Add columns
-        var contentCol = _gridView.Columns.AddVisible("Content");
-        contentCol.OptionsColumn.ReadOnly = true;
-        contentCol.Width = 400;
+        // Single column for custom drawing
+        var col = _gridView.Columns.AddVisible("Content");
+        col.OptionsColumn.ReadOnly = true;
 
-        var timeCol = _gridView.Columns.AddVisible("FormattedTime");
-        timeCol.OptionsColumn.ReadOnly = true;
-        timeCol.Width = 80;
-
-        var senderCol = _gridView.Columns.AddVisible("SenderInitials");
-        senderCol.OptionsColumn.ReadOnly = true;
-        senderCol.Width = 50;
-
-        var isSentCol = _gridView.Columns.AddVisible("IsSent");
-        isSentCol.Visible = false;
-
-        // Custom row appearance
-        _gridView.RowCellStyle += GridView_RowCellStyle;
+        // Custom drawing
         _gridView.CalcRowHeight += GridView_CalcRowHeight;
         _gridView.CustomDrawCell += GridView_CustomDrawCell;
     }
 
-    private void GridView_RowCellStyle(object sender, DevExpress.XtraGrid.Views.Grid.RowCellStyleEventArgs e)
-    {
-        if (e.RowHandle < 0) return;
-
-        var item = _gridView.GetRow(e.RowHandle) as MessageDisplayItem;
-        if (item == null) return;
-
-        if (item.IsSent)
-        {
-            e.Appearance.BackColor = Color.FromArgb(229, 246, 253);
-        }
-        else
-        {
-            e.Appearance.BackColor = Color.White;
-        }
-    }
-
     private void GridView_CalcRowHeight(object sender, DevExpress.XtraGrid.Views.Grid.RowHeightEventArgs e)
     {
-        e.RowHeight = 60;
+        e.RowHeight = 70;
     }
 
     private void GridView_CustomDrawCell(object sender, DevExpress.XtraGrid.Views.Base.RowCellCustomDrawEventArgs e)
@@ -176,75 +207,132 @@ public class MessagesView : XtraUserControl
         var g = e.Graphics;
         var bounds = e.Bounds;
 
-        // Background
-        var bgColor = item.IsSent ? Color.FromArgb(229, 246, 253) : Color.White;
-        using (var brush = new SolidBrush(bgColor))
+        g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+
+        // Background (chat area background)
+        using (var bgBrush = new SolidBrush(Color.FromArgb(245, 245, 245)))
         {
-            g.FillRectangle(brush, bounds);
+            g.FillRectangle(bgBrush, bounds);
         }
 
-        // Message bubble
-        var bubbleMargin = item.IsSent ? bounds.Width / 3 : 50;
-        var bubbleWidth = bounds.Width - bubbleMargin - 20;
-        var bubbleX = item.IsSent ? bounds.X + bubbleMargin : bounds.X + 50;
-        var bubbleRect = new Rectangle(bubbleX, bounds.Y + 5, bubbleWidth, bounds.Height - 10);
+        var margin = 12;
+        var avatarSize = 32;
+        var maxBubbleWidth = (int)(bounds.Width * 0.65);
 
-        using (var bubbleBrush = new SolidBrush(item.IsSent ? Color.FromArgb(229, 246, 253) : Color.White))
-        using (var borderPen = new Pen(Color.FromArgb(224, 224, 224)))
+        if (item.IsSent)
         {
-            g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+            // Sent message - right aligned, no avatar
+            var bubbleColor = Color.FromArgb(0, 175, 240); // Skype blue for sent
+            var textColor = Color.White;
 
-            var path = CreateRoundedRectangle(bubbleRect, 12);
-            g.FillPath(bubbleBrush, path);
-            if (!item.IsSent)
+            // Measure content
+            using var font = new Font("Segoe UI", 10);
+            var textSize = g.MeasureString(item.Content, font, maxBubbleWidth - 24);
+            var bubbleWidth = (int)textSize.Width + 24;
+            var bubbleHeight = Math.Max(40, (int)textSize.Height + 24);
+
+            var bubbleX = bounds.Right - margin - bubbleWidth;
+            var bubbleY = bounds.Y + (bounds.Height - bubbleHeight) / 2;
+            var bubbleRect = new Rectangle(bubbleX, bubbleY, bubbleWidth, bubbleHeight);
+
+            // Draw bubble
+            using (var bubbleBrush = new SolidBrush(bubbleColor))
             {
-                g.DrawPath(borderPen, path);
+                var path = CreateRoundedRectangle(bubbleRect, 16);
+                g.FillPath(bubbleBrush, path);
+            }
+
+            // Draw content
+            using (var textBrush = new SolidBrush(textColor))
+            {
+                var contentRect = new Rectangle(bubbleRect.X + 12, bubbleRect.Y + 8, bubbleRect.Width - 24, bubbleRect.Height - 24);
+                g.DrawString(item.Content, font, textBrush, contentRect);
+            }
+
+            // Draw time below bubble
+            using var timeFont = new Font("Segoe UI", 8);
+            using var timeBrush = new SolidBrush(Color.FromArgb(138, 138, 138));
+            var timeText = item.FormattedTime + " " + item.DeliveryStatusIcon;
+            var timeSize = g.MeasureString(timeText, timeFont);
+            var timeX = bounds.Right - margin - timeSize.Width;
+            var timeY = bubbleY + bubbleHeight + 2;
+            if (timeY + timeSize.Height > bounds.Bottom - 2)
+            {
+                // Draw inside bubble if no space below
+                timeX = bubbleRect.Right - 8 - timeSize.Width;
+                timeY = bubbleRect.Bottom - 16;
+                using var innerTimeBrush = new SolidBrush(Color.FromArgb(200, 255, 255, 255));
+                g.DrawString(timeText, timeFont, innerTimeBrush, timeX, timeY);
+            }
+            else
+            {
+                g.DrawString(timeText, timeFont, timeBrush, timeX, timeY);
             }
         }
-
-        // Avatar for received messages
-        if (!item.IsSent)
+        else
         {
-            var avatarRect = new Rectangle(bounds.X + 8, bounds.Y + 10, 32, 32);
+            // Received message - left aligned with avatar
+            var bubbleColor = Color.White;
+            var textColor = Color.FromArgb(36, 36, 36);
+
+            // Avatar
+            var avatarX = bounds.X + margin;
+            var avatarY = bounds.Y + (bounds.Height - avatarSize) / 2;
+            var avatarRect = new Rectangle(avatarX, avatarY, avatarSize, avatarSize);
+
             using (var avatarBrush = new SolidBrush(Color.FromArgb(0, 175, 240)))
             {
                 g.FillEllipse(avatarBrush, avatarRect);
             }
 
-            using (var font = new Font("Segoe UI", 10, FontStyle.Bold))
-            using (var textBrush = new SolidBrush(Color.White))
+            using (var initialsFont = new Font("Segoe UI", 10, FontStyle.Bold))
+            using (var initialsBrush = new SolidBrush(Color.White))
             {
-                var initials = item.SenderInitials ?? "?";
                 var sf = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
-                g.DrawString(initials, font, textBrush, avatarRect, sf);
+                g.DrawString(item.SenderInitials ?? "?", initialsFont, initialsBrush, avatarRect, sf);
             }
-        }
 
-        // Content
-        var contentRect = new Rectangle(bubbleRect.X + 10, bubbleRect.Y + 8, bubbleRect.Width - 20, bubbleRect.Height - 30);
-        using (var font = new Font("Segoe UI", 10))
-        using (var textBrush = new SolidBrush(Color.FromArgb(36, 36, 36)))
-        {
-            g.DrawString(item.Content, font, textBrush, contentRect);
-        }
+            // Measure content
+            using var font = new Font("Segoe UI", 10);
+            var textSize = g.MeasureString(item.Content, font, maxBubbleWidth - 24);
+            var bubbleWidth = (int)textSize.Width + 24;
+            var bubbleHeight = Math.Max(40, (int)textSize.Height + 24);
 
-        // Time
-        var timeRect = new Rectangle(bubbleRect.Right - 60, bubbleRect.Bottom - 20, 50, 16);
-        using (var font = new Font("Segoe UI", 8))
-        using (var textBrush = new SolidBrush(Color.FromArgb(138, 138, 138)))
-        {
-            var sf = new StringFormat { Alignment = StringAlignment.Far };
-            g.DrawString(item.FormattedTime, font, textBrush, timeRect, sf);
-        }
+            var bubbleX = avatarX + avatarSize + 8;
+            var bubbleY = bounds.Y + (bounds.Height - bubbleHeight) / 2;
+            var bubbleRect = new Rectangle(bubbleX, bubbleY, bubbleWidth, bubbleHeight);
 
-        // Delivery status for sent messages
-        if (item.IsSent && !string.IsNullOrEmpty(item.DeliveryStatusIcon))
-        {
-            var statusRect = new Rectangle(bubbleRect.Right - 20, bubbleRect.Bottom - 20, 16, 16);
-            using (var font = new Font("Segoe UI", 8))
-            using (var textBrush = new SolidBrush(item.DeliveryStatusClass == "read" ? Color.FromArgb(0, 175, 240) : Color.FromArgb(138, 138, 138)))
+            // Draw bubble
+            using (var bubbleBrush = new SolidBrush(bubbleColor))
+            using (var borderPen = new Pen(Color.FromArgb(220, 220, 220)))
             {
-                g.DrawString(item.DeliveryStatusIcon, font, textBrush, statusRect);
+                var path = CreateRoundedRectangle(bubbleRect, 16);
+                g.FillPath(bubbleBrush, path);
+                g.DrawPath(borderPen, path);
+            }
+
+            // Draw content
+            using (var textBrush = new SolidBrush(textColor))
+            {
+                var contentRect = new Rectangle(bubbleRect.X + 12, bubbleRect.Y + 8, bubbleRect.Width - 24, bubbleRect.Height - 24);
+                g.DrawString(item.Content, font, textBrush, contentRect);
+            }
+
+            // Draw time below bubble
+            using var timeFont = new Font("Segoe UI", 8);
+            using var timeBrush = new SolidBrush(Color.FromArgb(138, 138, 138));
+            var timeY = bubbleY + bubbleHeight + 2;
+            if (timeY + 12 > bounds.Bottom - 2)
+            {
+                // Draw inside bubble
+                var timeX = bubbleRect.Right - 8 - g.MeasureString(item.FormattedTime, timeFont).Width;
+                timeY = bubbleRect.Bottom - 16;
+                using var innerTimeBrush = new SolidBrush(Color.FromArgb(160, 160, 160));
+                g.DrawString(item.FormattedTime, timeFont, innerTimeBrush, timeX, timeY);
+            }
+            else
+            {
+                g.DrawString(item.FormattedTime, timeFont, timeBrush, bubbleX, timeY);
             }
         }
     }
@@ -310,6 +398,8 @@ public class MessagesView : XtraUserControl
             {
                 _headerName.Text = headerData.Name;
                 _headerStatus.Text = headerData.StatusText;
+                _headerInitials = headerData.Initials;
+                _avatarPanel.Invalidate();
             }
 
             // Update messages

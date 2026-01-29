@@ -105,5 +105,13 @@ public class MainForm : XtraForm
     {
         await _viewModel.InitializeAsync();
         _contactsView.RefreshData();
+
+        // Auto-select first conversation to show the chat view
+        if (_viewModel.ContactsViewModel.Conversations.Count > 0)
+        {
+            _viewModel.ContactsViewModel.SelectedConversation = _viewModel.ContactsViewModel.Conversations[0];
+            _contactsView.RefreshData();
+            _messagesView.RefreshData();
+        }
     }
 }
